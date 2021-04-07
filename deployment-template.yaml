@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kilo
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: "peer-validation.kilo.svc"
+webhooks:
+- name: "peer-validation.kilo.svc"
+  rules:
+  - apiGroups:   ["kilo.squat.ai"]
+    apiVersions: ["v1alpha1"]
+    operations:  ["CREATE","UPDATE"]
+    resources:   ["peers"]
+    scope:       "Cluster"
+  clientConfig:
+    service:
+      namespace: "kilo"
+      name: "peer-validation"
+      path: "/validate"
+    caBundle: ${CA_BUNDLE_BASE64}
+  admissionReviewVersions: ["v1"]
+  sideEffects: None
+  timeoutSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peer-validation-server
+  namespace: kilo
+  labels:
+    app.kubernetes.io/name: peer-validation-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: peer-validation-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: peer-validation-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: server
+        image: leonnicolas/kilo-peer-validation
+        args:
+        - --cert-file=/run/secrets/tls/tls.crt
+        - --key-file=/run/secrets/tls/tls.key
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8443
+          name: webhook
+        volumeMounts:
+        - name: tls
+          mountPath: /run/secrets/tls
+          readOnly: true
+      volumes:
+      - name: tls
+        secret:
+          secretName: peer-validation-webhook-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: peer-validation
+  namespace: kilo
+spec:
+  selector:
+    app.kubernetes.io/name: peer-validation-server
+  ports:
+    - port: 443
+      targetPort: webhook
