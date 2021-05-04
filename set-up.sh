@@ -26,7 +26,7 @@ openssl genrsa -out webhook-server-tls.key 4096
 openssl req -new -key webhook-server-tls.key -subj "/CN=Kilo Peer Validation Webhook"  -out ca.req
 
 # Sign the certificate with a conf file. This is neccessary because openssl will not copy subjectAltNames by default.
-openssl x509 -req  -in ca.req -CA ca.crt -CAkey ca.key -CAcreateserial -extensions v3_req -extfile $csr_conf -out webhook-server-tls.crt
+openssl x509 -req -days 36500  -in ca.req -CA ca.crt -CAkey ca.key -CAcreateserial -extensions v3_req -extfile $csr_conf -out webhook-server-tls.crt
 
 cd ..
 
@@ -47,8 +47,8 @@ if [ $? -ne 0 ]; then
 		exit 1
 	else
 		echo ""
-		kubectl delete secret $secret_name
-		kubectl create secret tls $secret_name --cert $keyDir/webhook-server-tls.crt --key $keyDir/webhook-server-tls.key
+		kubectl -n kilo delete secret $secret_name
+		kubectl -n kilo create secret tls $secret_name --cert $keyDir/webhook-server-tls.crt --key $keyDir/webhook-server-tls.key
 	fi
 fi
 
