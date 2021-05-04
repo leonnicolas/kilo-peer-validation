@@ -12,20 +12,21 @@ To make this easy, you can use one of the two following methods.
 
 ### Use [kube-webhook-certgen](https://github.com/jet/kube-webhook-certgen)
 
-You need `docker`.
-[kube-webhook-certgen](https://github.com/jet/kube-webhook-certgen) uses a depricated API and will be unavailable in v1.22+.
+You wil need `docker` installed.
+Note, that [kube-webhook-certgen](https://github.com/jet/kube-webhook-certgen) uses a depricated API to sign the certificate and will be unavailable in v1.22+.
 
 Apply the ValidatingWebhookConfiguration, Deployment and Service without a CaBundle with
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/leonnicolas/kilo-peer-validation/main/deployment-no-cabundle.yaml
 ```
 
-Then create a CA and tls certificates and apply them to your cluster with (Don't forget the change the path to your KUBECONFIG!)
+Then create a CA and tls certificates and apply them to your cluster with
 ```bash
 docker run -v ~/.kube/k3s.yaml:/kubeconfig.yaml:ro jettech/kube-webhook-certgen:v1.5.2 --kubeconfig /kubeconfig.yaml create --namespace kilo --secret-name peer-validation-webhook-tls --host peer-validation,peer-validation.kilo.svc,peer-validation.kilo.svc.cluster.local --key-name tls.key --cert-name tls.crt
 ```
+_(Don't forget the change the path to your kubeconfig!)_
 
-Then path the ValidatingWebhookConfiguration with the CaBundle and the Deployment with the tls certificates with 
+Then patch the ValidatingWebhookConfiguration with the CaBundle and the Deployment with the tls certificates with 
 ```bash
 docker run -v ~/.kube/k3s.yaml:/kubeconfig.yaml:ro jettech/kube-webhook-certgen:v1.5.2 --kubeconfig /kubeconfig.yaml patch --webhook-name peer-validation.kilo.svc --secret-name peer-validation-webhook-tls --namespace kilo --patch-mutating=false
 ```
