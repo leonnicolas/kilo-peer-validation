@@ -132,7 +132,7 @@ func main() {
 	)
 	mm := http.NewServeMux()
 	mm.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
-	go http.ListenAndServe(*metricsAddr, mm)
+	go log.Fatal(http.ListenAndServe(*metricsAddr, mm)) // Just restart the container, if metrics server crashes.
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/validate", validationHandler)
