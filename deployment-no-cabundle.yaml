@@ -50,10 +50,13 @@ spec:
         args:
         - --cert-file=/run/secrets/tls/tls.crt
         - --key-file=/run/secrets/tls/tls.key
+        - --metrics-address=:1107
         imagePullPolicy: Always
         ports:
         - containerPort: 8443
           name: webhook
+        - containerPort: 1107
+          name: metrics
         volumeMounts:
         - name: tls
           mountPath: /run/secrets/tls
