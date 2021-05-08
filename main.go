@@ -132,7 +132,11 @@ func main() {
 	)
 	mm := http.NewServeMux()
 	mm.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
-	go log.Fatal(http.ListenAndServe(*metricsAddr, mm)) // Just restart the container, if metrics server crashes.
+
+	exit := make(chan error, 1)
+	go func() {
+		exit <- http.ListenAndServe(*metricsAddr, mm)
+	}()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/validate", validationHandler)
@@ -140,5 +144,8 @@ func main() {
 		Addr:    ":8443",
 		Handler: mux,
 	}
-	log.Fatal(server.ListenAndServeTLS(*certPath, *keyPath))
+	go func() {
+		exit <- server.ListenAndServeTLS(*certPath, *keyPath)
+	}()
+	log.Fatal(<-exit)
 }
