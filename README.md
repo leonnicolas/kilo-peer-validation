@@ -1,3 +1,7 @@
+# Deprecated
+
+Kilo supports validations [natively](https://kilo.squat.ai/docs/peer-validation)
+
 # Kilo Peer Validation Webhook
 
 Validation of [Kilo](https://github.com/squat/kilo) Peers with a Validation Webhook.
@@ -26,7 +30,7 @@ docker run -v ~/.kube/k3s.yaml:/kubeconfig.yaml:ro jettech/kube-webhook-certgen:
 ```
 _(Don't forget the change the path to your kubeconfig!)_
 
-Then patch the ValidatingWebhookConfiguration with the CaBundle and the Deployment with the tls certificates with 
+Then patch the ValidatingWebhookConfiguration with the CaBundle and the Deployment with the tls certificates with
 ```bash
 docker run -v ~/.kube/k3s.yaml:/kubeconfig.yaml:ro jettech/kube-webhook-certgen:v1.5.2 --kubeconfig /kubeconfig.yaml patch --webhook-name peer-validation.kilo.svc --secret-name peer-validation-webhook-tls --namespace kilo --patch-mutating=false
 ```
